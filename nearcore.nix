@@ -32,6 +32,7 @@ rustPlatform.buildRustPackage rec {
     openssl
     llvm
     clang
+    git
   ];
 
   nativeBuildInputs = [

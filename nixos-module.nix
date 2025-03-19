@@ -35,15 +35,6 @@ in
           '';
         };
       };
-
-      bootnodes = lib.mkOption {
-        type = lib.types.str;
-        default = "ed25519:86EtEy7epneKyrcJwSWP7zsisTkfDRH5CFVszt4qiQYw@35.195.32.249:24567,ed25519:BFB78VTDBBfCY4jCP99zWxhXUcFAZqR22oSx2KEr8UM1@35.229.222.235:24567,ed25519:Cw1YyiX9cybvz3yZcbYdG7oDV6D7Eihdfc8eM1e1KKoh@35.195.27.104:24567,ed25519:33g3PZRdDvzdRpRpFRZLyscJdbMxUA3j3Rf2ktSYwwF8@34.94.132.112:24567,ed25519:CDQFcD9bHUWdc31rDfRi4ZrJczxg8derCzybcac142tK@35.196.209.192:24567";
-        example = "ed25519:86EtEy7epneKyrcJwSWP7zsisTkfDRH5CFVszt4qiQYw@35.195.32.249:24567,ed25519:BFB78VTDBBfCY4jCP99zWxhXUcFAZqR22oSx2KEr8UM1@35.229.222.235:24567,ed25519:Cw1YyiX9cybvz3yZcbYdG7oDV6D7Eihdfc8eM1e1KKoh@35.195.27.104:24567,ed25519:33g3PZRdDvzdRpRpFRZLyscJdbMxUA3j3Rf2ktSYwwF8@34.94.132.112:24567,ed25519:CDQFcD9bHUWdc31rDfRi4ZrJczxg8derCzybcac142tK@35.196.209.192:24567";
-        description = ''
-          The bootnodes to use. Defaults to mainnet bootnodes.
-        '';
-      };
     };
   };
 
@@ -58,6 +49,13 @@ in
         DynamicUser = true;
         Restart = "on-failure";
       };
+      path = [
+        pkgs.rclone
+        pkgs.curl
+        pkgs.bash
+        pkgs.jq
+        pkgs.gawk
+      ];
       script =
         let
           dir = "/var/lib/near-validator";
@@ -65,7 +63,9 @@ in
         in
         ''
           ${neard} --home ${dir} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
-          ${neard} --home ${dir} run --boot-nodes=${cfg.bootnodes}
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/update_boot_nodes.sh | bash -s -- mainnet ${dir}/config.json
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${dir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
+          ${neard} --home ${dir} run
         '';
     };
   };

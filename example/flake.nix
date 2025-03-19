@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     near-validator = {
-      url = "github:Openmesh-Network/near-validator";
+      url = "path:/home/plopmenz/git/openmesh/near-validator"; # "github:Openmesh-Network/near-validator";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
