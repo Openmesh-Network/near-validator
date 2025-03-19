@@ -72,7 +72,7 @@ in
         ''
           ${neard} --home ${dir} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
           curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/update_boot_nodes.sh | bash -s -- mainnet ${dir}/config.json
-          if ${if cfg.fast-sync then "true" else "false"}; then
+          if ${if cfg.fast-sync then "[ -z \"$( ls -A '${dir}/data')\" ]" else "false"}; then
             curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${dir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
           fi
           ${neard} --home ${dir} run
