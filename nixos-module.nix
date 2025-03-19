@@ -35,6 +35,15 @@ in
           '';
         };
       };
+
+      fast-sync = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        example = false;
+        description = ''
+          Download snapshot to data folder before starting near node.
+        '';
+      };
     };
   };
 
@@ -50,12 +59,11 @@ in
         Restart = "on-failure";
       };
       path = [
-        pkgs.rclone
         pkgs.curl
         pkgs.bash
         pkgs.jq
         pkgs.gawk
-      ];
+      ] ++ lib.optionals cfg.fast-sync [ pkgs.rclone ];
       script =
         let
           dir = "/var/lib/near-validator";
@@ -64,7 +72,9 @@ in
         ''
           ${neard} --home ${dir} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
           curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/update_boot_nodes.sh | bash -s -- mainnet ${dir}/config.json
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${dir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
+          if ${if cfg.fast-sync then "true" else "false"}; then
+            curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${dir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
+          fi
           ${neard} --home ${dir} run
         '';
     };

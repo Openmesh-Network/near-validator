@@ -49,6 +49,7 @@
                   id = "openmesh";
                   version = "pool";
                 };
+                fast-sync = false;
               };
 
               networking = {
