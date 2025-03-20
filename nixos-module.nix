@@ -67,7 +67,7 @@ in
       script =
         let
           dir = "/var/lib/near-validator";
-          neard = lib.getExe (pkgs.callPackage ./nearcore.nix { });
+          neard = lib.getExe (pkgs.callPackage ./package.nix { });
         in
         ''
           ${neard} --home ${dir} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
