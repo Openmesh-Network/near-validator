@@ -1,5 +1,5 @@
 {
-  nixpkgs,
+  near-cli,
   ...
 }:
 {
@@ -39,10 +39,33 @@ in
       fast-sync = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        example = false;
         description = ''
           Download snapshot to data folder before starting near node.
         '';
+      };
+
+      pinger = {
+        enable = lib.mkEnableOption "Enable pinging the staking pool contract automatically on a fixed schedule.";
+
+        schedule = {
+          minimum-wait = lib.mkOption {
+            type = lib.types.str;
+            default = "12h";
+            example = "8h";
+            description = ''
+              Minimum amount of time to wait between pings. See systemd timers OnUnitInactiveSec for valid options.
+            '';
+          };
+
+          random-delay = lib.mkOption {
+            type = lib.types.str;
+            default = "1h";
+            example = "0";
+            description = ''
+              Maximum amount of time to added to the wait between pings (randomized). See systemd timers RandomizedDelaySec for valid options.
+            '';
+          };
+        };
       };
     };
   };
@@ -76,6 +99,44 @@ in
             curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${dir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
           fi
           ${neard} --home ${dir} run
+        '';
+    };
+
+    systemd.timers.near-validator-pinger = lib.mkIf cfg.pinger.enable {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnUnitInactiveSec = cfg.pinger.schedule.minimum-wait;
+        RandomizedDelaySec = cfg.pinger.schedule.random-delay;
+        Unit = "near-validator-pinger.service";
+        Persistent = true;
+      };
+    };
+
+    systemd.services.near-validator-pinger = lib.mkIf cfg.pinger.enable {
+      wantedBy = [ "multi-user.target" ];
+      description = "Near Protocol Validator Pinger.";
+      after = [ "network.target" ];
+      serviceConfig = {
+        Type = "exec";
+        StateDirectory = "near-validator-pinger";
+        DynamicUser = true;
+        Restart = "on-failure";
+      };
+      environment = {
+        HOME = "/var/lib/near-validator-pinger";
+      };
+      script =
+        let
+          credentialsdir = "/var/lib/near-validator-pinger/.near-credentials/mainnet";
+          near = lib.getExe near-cli.packages.${pkgs.system}.default;
+          account = "$( ls -A '${credentialsdir}' | sed -e 's/\.json$//')";
+        in
+        ''
+          if [ -z "$( ls -A '${credentialsdir}' )" ]; then
+            ${near} account create-account fund-later use-auto-generation save-to-folder ${credentialsdir}
+          fi
+
+          ${near} call ${cfg.pool.id}.${cfg.pool.version}.near ping '{}' --accountId ${account} --gas=300000000000000 --network-id=mainnet
         '';
     };
   };

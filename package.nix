@@ -43,7 +43,6 @@ rustPlatform.buildRustPackage rec {
   meta = with lib; {
     description = "Reference client for NEAR Protocol";
     homepage = "https://github.com/near/nearcore";
-    license = licenses.gpl3;
     mainProgram = "neard";
   };
 }

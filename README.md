@@ -14,7 +14,7 @@ Run a NEAR validator with minimal setup and maximum reproducibility using Nix.
 ## Generate config
 
 ```sh
-nix run github:Openmesh-Network/near-validator init  --experimental-features 'nix-command flakes' -- --chain-id=mainnet --account-id="<pool id>.<pool or poolv1>.near" --download-genesis --download-config validator
+nix run github:Openmesh-Network/near-validator init  --experimental-features 'nix-command flakes' --accept-flake-config -- --chain-id=mainnet --account-id="<pool id>.<pool or poolv1>.near" --download-genesis --download-config validator
 curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/update_boot_nodes.sh | bash -s -- mainnet $HOME/.near/config.json
 ```
 
@@ -30,7 +30,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/
 ## Run NEAR node
 
 ```sh
-nix run github:Openmesh-Network/near-validator --experimental-features 'nix-command flakes' run
+nix run github:Openmesh-Network/near-validator run --experimental-features 'nix-command flakes' --accept-flake-config
 ```
 
 ## Update flake
@@ -45,7 +45,24 @@ nix flake update --flake github:Openmesh-Network/near-validator
 
 An example Xnode (NixOS container) configuration can be found [here](./example/flake.nix).
 
+## Add flake input
+
 ```nix
+  inputs = {
+    nixpkgs.url = "<your nixpkgs version>";
+    near-validator.url = "github:Openmesh-Network/near-validator";
+  };
+```
+
+## Edit config
+
+This assumes nixosSystem has `specialArgs = { inherit inputs; };` to access the import. If this is not the case, add it or import the near-validator in another way.
+
+```nix
+imports = [
+    inputs.near-validator.nixosModules.default
+];
+
 boot.kernel.sysctl = {
     "net.core.rmem_max" = 8388608;
     "net.core.wmem_max" = 8388608;
@@ -60,6 +77,7 @@ services.near-validator = {
         id = "<pool id>";
         version = "<pool or poolv1>";
     };
+    # pinger.enable = true;
 };
 
 networking = {
