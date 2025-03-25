@@ -71,6 +71,16 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # https://github.com/near/nearcore/blob/master/scripts/set_kernel_params.sh
+    # Not allowed to change these settings in container, should be set in host configuration instead
+    boot.kernel.sysctl = {
+      "net.core.rmem_max" = 8388608;
+      "net.core.wmem_max" = 8388608;
+      "net.ipv4.tcp_rmem" = "4096 87380 8388608";
+      "net.ipv4.tcp_wmem" = "4096 16384 8388608";
+      "net.ipv4.tcp_slow_start_after_idle" = 0;
+    };
+
     systemd.services.near-validator = {
       wantedBy = [ "multi-user.target" ];
       description = "Near Protocol Validator.";
