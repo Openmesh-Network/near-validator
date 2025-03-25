@@ -17,7 +17,10 @@ rustPlatform.buildRustPackage rec {
   };
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
-    allowBuiltinFetchGit = true;
+    outputHashes = {
+      "bolero-0.10.0" = "sha256-758bPz+qMRLk+Pw51cJWM8GCo1cvsEOT+cRM3pMX7ZI=";
+      "protobuf-3.0.2" = "sha256-HVNlMXZRNa9F8hr6sj75uuCvppR6mVOSumSLnye/F3Y=";
+    };
   };
 
   NEAR_RELEASE_BUILD = "release";
