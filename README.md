@@ -15,7 +15,6 @@ Run a NEAR validator with minimal setup and maximum reproducibility using Nix.
 
 ```sh
 nix run github:Openmesh-Network/near-validator init  --experimental-features 'nix-command flakes' --accept-flake-config -- --chain-id=mainnet --account-id="<pool id>.<pool or poolv1>.near" --download-genesis --download-config validator
-curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/update_boot_nodes.sh | bash -s -- mainnet $HOME/.near/config.json
 ```
 
 ## Fast sync (optional)
@@ -30,7 +29,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/
 ## Run NEAR node
 
 ```sh
-nix run github:Openmesh-Network/near-validator run --experimental-features 'nix-command flakes' --accept-flake-config
+nix run github:Openmesh-Network/near-validator run --experimental-features 'nix-command flakes' --accept-flake-config -- --boot-nodes "$(curl -s -X POST https://rpc.mainnet.fastnear.com -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "network_info", "params": [], "id": "0"}' | jq '.result.active_peers as $list1 | .result.known_producers as $list2 | $list1[] as $active_peer | $list2[] | select(.peer_id == $active_peer.id) | "\(.peer_id)@\($active_peer.addr)"' | awk 'NR>2 {print ","} length($0) {print p} {p=$0}' ORS="" | sed 's/"//g')"
 ```
 
 ## Update flake

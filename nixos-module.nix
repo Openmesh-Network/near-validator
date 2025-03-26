@@ -38,7 +38,8 @@ in
 
       fast-sync = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
+        example = true;
         description = ''
           Download snapshot to data folder before starting near node.
         '';
@@ -81,36 +82,46 @@ in
       "net.ipv4.tcp_slow_start_after_idle" = 0;
     };
 
-    systemd.services.near-validator = {
-      wantedBy = [ "multi-user.target" ];
-      description = "Near Protocol Validator.";
-      after = [ "network.target" ];
-      serviceConfig = {
-        Type = "exec";
-        StateDirectory = "near-validator";
-        DynamicUser = true;
-        Restart = "on-failure";
+    systemd.services.near-validator =
+      let
+        stateDir = "/var/lib/near-validator";
+      in
+      {
+        wantedBy = [ "multi-user.target" ];
+        description = "Near Protocol Validator.";
+        after = [ "network.target" ];
+        serviceConfig = {
+          Type = "exec";
+          StateDirectory = stateDir;
+          DynamicUser = true;
+          Restart = "on-failure";
+        };
+        path =
+          [
+            pkgs.curl
+            pkgs.jq
+            pkgs.gawk
+          ]
+          ++ lib.optionals cfg.fast-sync [
+            pkgs.bash
+            pkgs.rclone
+          ];
+        environment = {
+          HOME = stateDir;
+        };
+        script =
+          let
+            nearDir = "${stateDir}/.near";
+            neard = lib.getExe (pkgs.callPackage ./package.nix { });
+          in
+          ''
+            ${neard} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
+            if ${if cfg.fast-sync then "[ -z \"$( ls -A '${nearDir}/data')\" ]" else "false"}; then
+              curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${nearDir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
+            fi
+            ${neard} run --boot-nodes "$(curl -s -X POST https://rpc.mainnet.fastnear.com -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "network_info", "params": [], "id": "0"}' | jq '.result.active_peers as $list1 | .result.known_producers as $list2 | $list1[] as $active_peer | $list2[] | select(.peer_id == $active_peer.id) | "\(.peer_id)@\($active_peer.addr)"' | awk 'NR>2 {print ","} length($0) {print p} {p=$0}' ORS="" | sed 's/"//g')"
+          '';
       };
-      path = [
-        pkgs.curl
-        pkgs.bash
-        pkgs.jq
-        pkgs.gawk
-      ] ++ lib.optionals cfg.fast-sync [ pkgs.rclone ];
-      script =
-        let
-          dir = "/var/lib/near-validator";
-          neard = lib.getExe (pkgs.callPackage ./package.nix { });
-        in
-        ''
-          ${neard} --home ${dir} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/update_boot_nodes.sh | bash -s -- mainnet ${dir}/config.json
-          if ${if cfg.fast-sync then "[ -z \"$( ls -A '${dir}/data')\" ]" else "false"}; then
-            curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${dir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
-          fi
-          ${neard} --home ${dir} run
-        '';
-    };
 
     systemd.timers.near-validator-pinger = lib.mkIf cfg.pinger.enable {
       wantedBy = [ "timers.target" ];
@@ -122,32 +133,38 @@ in
       };
     };
 
-    systemd.services.near-validator-pinger = lib.mkIf cfg.pinger.enable {
-      wantedBy = [ "multi-user.target" ];
-      description = "Near Protocol Validator Pinger.";
-      after = [ "network.target" ];
-      serviceConfig = {
-        Type = "exec";
-        StateDirectory = "near-validator-pinger";
-        DynamicUser = true;
-        Restart = "on-failure";
-      };
-      environment = {
-        HOME = "/var/lib/near-validator-pinger";
-      };
-      script =
-        let
-          credentialsdir = "/var/lib/near-validator-pinger/.near-credentials/mainnet";
-          near = lib.getExe near-cli.packages.${pkgs.system}.default;
-          account = "$( ls -A '${credentialsdir}' | sed -e 's/\.json$//')";
-        in
-        ''
-          if [ -z "$( ls -A '${credentialsdir}' )" ]; then
-            ${near} account create-account fund-later use-auto-generation save-to-folder ${credentialsdir}
-          fi
+    systemd.services.near-validator-pinger = lib.mkIf cfg.pinger.enable (
+      let
+        stateDir = "/var/lib/near-validator-pinger";
+      in
+      {
+        wantedBy = [ "multi-user.target" ];
+        description = "Near Protocol Validator Pinger.";
+        after = [ "network.target" ];
+        serviceConfig = {
+          Type = "exec";
+          StateDirectory = stateDir;
+          DynamicUser = true;
+          Restart = "on-failure";
+          RestartSec = "1m";
+        };
+        environment = {
+          HOME = stateDir;
+        };
+        script =
+          let
+            credentialsDir = "${stateDir}/.near-credentials/mainnet";
+            near = lib.getExe near-cli.packages.${pkgs.system}.default;
+            account = "$( ls -A '${credentialsDir}' | sed -e 's/\.json$//')";
+          in
+          ''
+            if [ -z "$( ls -A '${credentialsDir}' )" ]; then
+              ${near} account create-account fund-later use-auto-generation save-to-folder ${credentialsDir}
+            fi
 
-          ${near} call ${cfg.pool.id}.${cfg.pool.version}.near ping '{}' --accountId ${account} --gas=300000000000000 --network-id=mainnet
-        '';
-    };
+            ${near} call ${cfg.pool.id}.${cfg.pool.version}.near ping '{}' --accountId="${account}" --gas=300000000000000 --network-id=mainnet
+          '';
+      }
+    );
   };
 }

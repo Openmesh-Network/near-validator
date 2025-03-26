@@ -1,7 +1,16 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    near-validator.url = "path:/home/plopmenz/git/openmesh/near-validator"; # "github:Openmesh-Network/near-validator";
+    near-validator.url = "github:Openmesh-Network/near-validator";
+  };
+
+  nixConfig = {
+    extra-substituters = [
+      "https://openmesh.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "openmesh.cachix.org-1:du4NDeMWxcX8T5GddfuD0s/Tosl3+6b+T2+CLKHgXvQ="
+    ];
   };
 
   outputs =
@@ -36,7 +45,6 @@
                   id = "openmesh";
                   version = "pool";
                 };
-                fast-sync = false;
                 pinger.enable = true;
               };
 
