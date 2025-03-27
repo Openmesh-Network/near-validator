@@ -92,7 +92,7 @@ in
         after = [ "network.target" ];
         serviceConfig = {
           Type = "exec";
-          StateDirectory = stateDir;
+          StateDirectory = "near-validator";
           DynamicUser = true;
           Restart = "on-failure";
         };
@@ -143,7 +143,7 @@ in
         after = [ "network.target" ];
         serviceConfig = {
           Type = "exec";
-          StateDirectory = stateDir;
+          StateDirectory = "near-validator-pinger";
           DynamicUser = true;
           Restart = "on-failure";
           RestartSec = "1m";
