@@ -162,7 +162,7 @@ in
               ${near} account create-account fund-later use-auto-generation save-to-folder ${credentialsDir}
             fi
 
-            ${near} call ${cfg.pool.id}.${cfg.pool.version}.near ping '{}' --accountId="${account}" --gas=300000000000000 --network-id=mainnet
+            ${near} call ${cfg.pool.id}.${cfg.pool.version}.near ping '{}' --accountId="${account}" --gas=10000000000000 --network-id=mainnet
           '';
       }
     );
