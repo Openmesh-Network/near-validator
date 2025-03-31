@@ -38,7 +38,7 @@ in
 
       fast-sync = lib.mkOption {
         type = lib.types.bool;
-        default = false;
+        default = true;
         example = true;
         description = ''
           Download snapshot to data folder before starting near node.
