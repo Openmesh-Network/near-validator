@@ -82,6 +82,12 @@ in
       "net.ipv4.tcp_slow_start_after_idle" = 0;
     };
 
+    users.groups.near-validator = { };
+    users.users.near-validator = {
+      isSystemUser = true;
+      group = "near-validator";
+    };
+
     systemd.services.near-validator =
       let
         stateDir = "/var/lib/near-validator";
@@ -93,7 +99,8 @@ in
         serviceConfig = {
           Type = "exec";
           StateDirectory = "near-validator";
-          DynamicUser = true;
+          User = "near-validator";
+          Group = "near-validator";
           Restart = "on-failure";
         };
         path =
@@ -123,6 +130,12 @@ in
           '';
       };
 
+    users.groups.near-validator-pinger = { };
+    users.users.near-validator-pinger = {
+      isSystemUser = true;
+      group = "near-validator-pinger";
+    };
+
     systemd.timers.near-validator-pinger = lib.mkIf cfg.pinger.enable {
       wantedBy = [ "timers.target" ];
       timerConfig = {
@@ -144,7 +157,8 @@ in
         serviceConfig = {
           Type = "exec";
           StateDirectory = "near-validator-pinger";
-          DynamicUser = true;
+          User = "near-validator";
+          Group = "near-validator";
           Restart = "on-failure";
           RestartSec = "1m";
         };
