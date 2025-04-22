@@ -36,9 +36,9 @@ in
         };
       };
 
-      fast-sync = lib.mkOption {
+      snapshot-sync = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         example = true;
         description = ''
           Download snapshot to data folder before starting near node.
@@ -109,7 +109,7 @@ in
             pkgs.jq
             pkgs.gawk
           ]
-          ++ lib.optionals cfg.fast-sync [
+          ++ lib.optionals cfg.snapshot-sync [
             pkgs.bash
             pkgs.rclone
           ];
@@ -123,7 +123,7 @@ in
           in
           ''
             ${neard} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
-            if ${if cfg.fast-sync then "[ -z \"$( ls -A '${nearDir}/data')\" ]" else "false"}; then
+            if ${if cfg.snapshot-sync then "[ -z \"$( ls -A '${nearDir}/data')\" ]" else "false"}; then
               curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${nearDir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
             fi
             ${neard} run --boot-nodes "$(curl -s -X POST https://rpc.mainnet.fastnear.com -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "network_info", "params": [], "id": "0"}' | jq '.result.active_peers as $list1 | .result.known_producers as $list2 | $list1[] as $active_peer | $list2[] | select(.peer_id == $active_peer.id) | "\(.peer_id)@\($active_peer.addr)"' | awk 'NR>2 {print ","} length($0) {print p} {p=$0}' ORS="" | sed 's/"//g')"
