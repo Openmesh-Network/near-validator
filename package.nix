@@ -7,14 +7,15 @@
 }:
 rustPlatform.buildRustPackage rec {
   pname = "nearcore";
-  version = "2.5.2";
+  version = "2.6.1";
 
   src = fetchFromGitHub {
     owner = "near";
     repo = "nearcore";
     tag = version;
-    hash = "sha256-BRSB8Nv+DKSl5AkbxGbP16yrQb5GCw+IyCABextxKX4=";
+    hash = "sha256-wkpt0Iz9egx9VXqPdT4uzmbLQPjucqITFw7x4M1FEwQ=";
   };
+
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
     outputHashes = {
@@ -23,8 +24,11 @@ rustPlatform.buildRustPackage rec {
     };
   };
 
-  NEAR_RELEASE_BUILD = "release";
+  patches = [
+    ./disable-test-contracts-build.patch
+  ];
 
+  NEAR_RELEASE_BUILD = "release";
   OPENSSL_NO_VENDOR = 1; # we want to link to OpenSSL provided by Nix
 
   buildAndTestSubdir = "neard";
