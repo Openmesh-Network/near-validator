@@ -122,6 +122,7 @@ in
             neard = lib.getExe (pkgs.callPackage ./package.nix { });
           in
           ''
+            rm -rf ${nearDir}/genesis.json ${nearDir}/config.json
             ${neard} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
             if ${if cfg.snapshot-sync then "[ -z \"$( ls -A '${nearDir}/data')\" ]" else "false"}; then
               curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${nearDir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
