@@ -36,15 +36,6 @@ in
         };
       };
 
-      snapshot-sync = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        example = true;
-        description = ''
-          Download snapshot to data folder before starting near node.
-        '';
-      };
-
       pinger = {
         enable = lib.mkEnableOption "Enable pinging the staking pool contract automatically on a fixed schedule.";
 
@@ -103,16 +94,11 @@ in
           Group = "near-validator";
           Restart = "on-failure";
         };
-        path =
-          [
-            pkgs.curl
-            pkgs.jq
-            pkgs.gawk
-          ]
-          ++ lib.optionals cfg.snapshot-sync [
-            pkgs.bash
-            pkgs.rclone
-          ];
+        path = [
+          pkgs.curl
+          pkgs.jq
+          pkgs.gawk
+        ];
         environment = {
           HOME = stateDir;
         };
@@ -124,9 +110,6 @@ in
           ''
             rm -rf ${nearDir}/genesis.json ${nearDir}/config.json
             ${neard} init --chain-id=mainnet --account-id="${cfg.pool.id}.${cfg.pool.version}.near" --download-genesis --download-config validator
-            if ${if cfg.snapshot-sync then "[ -z \"$( ls -A '${nearDir}/data')\" ]" else "false"}; then
-              curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/fastnear/static/refs/heads/main/down_rclone.sh | DATA_PATH=${nearDir}/data CHAIN_ID=mainnet RPC_TYPE=fast-rpc bash
-            fi
             ${neard} run --boot-nodes "$(curl -s -X POST https://rpc.mainnet.fastnear.com -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "network_info", "params": [], "id": "0"}' | jq '.result.active_peers as $list1 | .result.known_producers as $list2 | $list1[] as $active_peer | $list2[] | select(.peer_id == $active_peer.id) | "\(.peer_id)@\($active_peer.addr)"' | awk 'NR>2 {print ","} length($0) {print p} {p=$0}' ORS="" | sed 's/"//g')"
           '';
       };

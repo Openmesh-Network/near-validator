@@ -1,19 +1,17 @@
 {
   rustPlatform,
-  lib,
   fetchFromGitHub,
-  fetchurl,
   pkgs,
 }:
 rustPlatform.buildRustPackage rec {
   pname = "nearcore";
-  version = "2.6.3";
+  version = "2.6.5";
 
   src = fetchFromGitHub {
     owner = "near";
     repo = "nearcore";
     tag = version;
-    hash = "sha256-5ZUryl6JNpzT2ExS0/ALYgHIsTniEyvkviNM96UAnSM=";
+    hash = "sha256-TZUDA0wQTE8lcrCErWQBV6YE1IM+28UfyONGiM3hWTY=";
   };
 
   cargoLock = {
@@ -47,7 +45,7 @@ rustPlatform.buildRustPackage rec {
     rustPlatform.bindgenHook
   ];
 
-  meta = with lib; {
+  meta = {
     description = "Reference client for NEAR Protocol";
     homepage = "https://github.com/near/nearcore";
     mainProgram = "neard";
