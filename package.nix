@@ -5,18 +5,19 @@
 }:
 rustPlatform.buildRustPackage rec {
   pname = "nearcore";
-  version = "2.6.5";
+  version = "2.7.0";
 
   src = fetchFromGitHub {
     owner = "near";
     repo = "nearcore";
     tag = version;
-    hash = "sha256-TZUDA0wQTE8lcrCErWQBV6YE1IM+28UfyONGiM3hWTY=";
+    hash = "sha256-ElTi2rbFGHODyUrIGfCNY0omi3NzxjW0Cfe5+b7F/M0=";
   };
 
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
     outputHashes = {
+      "okapi-0.7.0" = "sha256-j/MqvHYfW8GzyQPrbg17O61JuYlQCKbFEwOz1hWxuSA=";
       "bolero-0.10.0" = "sha256-758bPz+qMRLk+Pw51cJWM8GCo1cvsEOT+cRM3pMX7ZI=";
       "protobuf-3.0.2" = "sha256-HVNlMXZRNa9F8hr6sj75uuCvppR6mVOSumSLnye/F3Y=";
     };

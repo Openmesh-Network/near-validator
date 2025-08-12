@@ -1,20 +1,25 @@
 --- a/runtime/near-test-contracts/build.rs
 +++ b/runtime/near-test-contracts/build.rs
-@@ -76,14 +76,17 @@ fn build_contract(dir: &str, args: &[&str], output: &str) -> Result<(), Error> {
+@@ -75,16 +75,20 @@ fn build_contract(dir: &str, features: &[&str], output: &str) -> Result<(), Erro
      let target_dir = out_dir();
  
      // build the contract
 -    let mut cmd = cargo_build_cmd(&target_dir);
+-    let features_string = features.join(",");
+-    let args = if features.is_empty() { vec![] } else { vec!["--features", &features_string] };
 -    cmd.args(args);
 -    cmd.current_dir(dir);
 -    check_status(cmd)?;
 +    // let mut cmd = cargo_build_cmd(&target_dir);
++    // let features_string = features.join(",");
++    // let args = if features.is_empty() { vec![] } else { vec!["--features", &features_string] };
 +    // cmd.args(args);
 +    // cmd.current_dir(dir);
 +    // check_status(cmd)?;
  
      // copy the wasm file to the `res` directory
 -    let file_path = format!("wasm32-unknown-unknown/release/{}.wasm", dir.replace('-', "_"));
++    // let file_path = format!("wasm32-unknown-unknown/release/{}.wasm", dir.replace('-', "_"));
 +    let file_path =
 +        format!("wasm32-unknown-unknown/release/{}.wasm", dir.replace('-', "_").replace("./", ""));
      let from = target_dir.join(file_path);
