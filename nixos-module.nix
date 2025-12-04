@@ -71,6 +71,10 @@ in
       "net.ipv4.tcp_rmem" = "4096 87380 8388608";
       "net.ipv4.tcp_wmem" = "4096 16384 8388608";
       "net.ipv4.tcp_slow_start_after_idle" = 0;
+      "net.ipv4.tcp_congestion_control" = "bbr";
+      "net.core.default_qdisc" = "fq";
+      "net.ipv4.tcp_mtu_probing" = 1;
+      "net.ipv4.tcp_max_syn_backlog" = 8096;
     };
 
     users.groups.near-validator = { };
