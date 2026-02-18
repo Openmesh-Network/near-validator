@@ -2,7 +2,7 @@
   description = "Nix flake to run a NEAR validator with minimal setup.";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     near-cli.url = "github:Openmesh-Network/near-cli";
     systems.url = "github:nix-systems/default";
   };
