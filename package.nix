@@ -1,24 +1,23 @@
 {
-  rustPlatform,
-  fetchFromGitHub,
   pkgs,
+  ...
 }:
-rustPlatform.buildRustPackage rec {
+pkgs.rustPlatform.buildRustPackage rec {
   pname = "nearcore";
-  version = "2.10.6";
+  version = "2.10.7";
 
-  src = fetchFromGitHub {
+  src = pkgs.fetchFromGitHub {
     owner = "near";
     repo = "nearcore";
     tag = version;
-    hash = "sha256-Iw9BDEphfi7tYEmA2yKKNRA4lmZaBvjpFWpWTvLlBvs=";
+    hash = "sha256-NnEgJaMmBqIAbgv+8tX/1LcPa3E/jJc9SDslQclxTeo=";
   };
 
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
     outputHashes = {
-      "okapi-0.7.0" = "sha256-j/MqvHYfW8GzyQPrbg17O61JuYlQCKbFEwOz1hWxuSA=";
       "bolero-0.10.0" = "sha256-758bPz+qMRLk+Pw51cJWM8GCo1cvsEOT+cRM3pMX7ZI=";
+      "okapi-0.7.0" = "sha256-j/MqvHYfW8GzyQPrbg17O61JuYlQCKbFEwOz1hWxuSA=";
       "protobuf-3.0.2" = "sha256-HVNlMXZRNa9F8hr6sj75uuCvppR6mVOSumSLnye/F3Y=";
     };
   };
@@ -33,17 +32,13 @@ rustPlatform.buildRustPackage rec {
   buildAndTestSubdir = "neard";
   doCheck = false; # needs network
 
-  buildInputs = with pkgs; [
-    zlib
-    openssl
-    llvm
-    clang
+  buildInputs = [
+    pkgs.openssl
   ];
 
   nativeBuildInputs = [
     pkgs.pkg-config
-    pkgs.protobuf
-    rustPlatform.bindgenHook
+    pkgs.rustPlatform.bindgenHook
   ];
 
   meta = {

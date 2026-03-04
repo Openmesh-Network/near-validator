@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - cache
-  workflow_dispatch:
 
 jobs:
   build-and-upload:
@@ -12,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
@@ -20,10 +19,10 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Connect to Cachix
-        uses: cachix/cachix-action@v14
+        uses: cachix/cachix-action@v16
         with:
           name: openmesh
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Upload derivation to Cachix
-        run: nix build --accept-flake-config --print-out-paths | cachix push openmesh
+        run: nix build --accept-flake-config --print-out-paths --fallback | cachix push openmesh
