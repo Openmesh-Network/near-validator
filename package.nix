@@ -39,7 +39,7 @@ rustPlatform.buildRustPackage rec {
 
   nativeBuildInputs = [
     pkgs.pkg-config
-    pkgs.rustPlatform.bindgenHook
+    rustPlatform.bindgenHook
   ];
 
   meta = {
