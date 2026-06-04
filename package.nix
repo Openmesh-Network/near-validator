@@ -3,14 +3,11 @@
   ...
 }:
 let
-  # Override rustPlatform's internal stdenv to use the pre-built gcc14Stdenv
-  rustPlatformWithGcc14 = pkgs.rustPlatform.overrideScope (final: prev: {
-    stdenv = pkgs.gcc14Stdenv;
-  });
+  # Use the valid gcc14Stdenv attribute you found
+  stdenv' = pkgs.gcc14Stdenv;
 in
-# Tell the builder to use our modified rustPlatform and gcc14Stdenv base
-(rustPlatformWithGcc14.buildRustPackage.override { 
-  stdenv = pkgs.gcc14Stdenv; 
+(pkgs.rustPlatform.buildRustPackage.override { 
+  stdenv = stdenv'; 
 }) rec {
   pname = "nearcore";
   version = "2.12.0";
@@ -38,6 +35,11 @@ in
   NEAR_RELEASE_BUILD = "release";
   OPENSSL_NO_VENDOR = 1;
 
+  # --- FORCE GCC 14 FOR CC-RS ---
+  # These env vars explicitly hijack what cc-rs looks for during execution
+  CC = "${stdenv'.cc}/bin/cc";
+  CXX = "${stdenv'.cc}/bin/c++";
+
   buildAndTestSubdir = "neard";
   doCheck = false;
 
@@ -51,8 +53,7 @@ in
 
   nativeBuildInputs = [
     pkgs.pkg-config
-    # Make sure we use the bindgenHook from our modified scope!
-    rustPlatformWithGcc14.bindgenHook
+    pkgs.rustPlatform.bindgenHook
     pkgs.cmake
     pkgs.bzip2
     pkgs.gnumake
