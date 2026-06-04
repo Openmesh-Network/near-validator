@@ -43,12 +43,11 @@
       packages = eachSystem (
         { pkgs, unstablePkgs, ... }:
         {
-          default = pkgs.callPackage ./package.nix { rustPlatform = pkgs.rustPlatform.overrideScope (final: prev: {
-            rust = prev.rust // {
+          default = pkgs.callPackage ./package.nix { rustPlatform = nixpkgs.makeRustPlatform {
               rustc = unstablePkgs.rustc;
               cargo = unstablePkgs.cargo;
             };
-          });};
+          };
         }
       );
 
