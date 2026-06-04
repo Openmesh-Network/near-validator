@@ -2,7 +2,16 @@
   pkgs,
   ...
 }:
-(pkgs.rustPlatform.buildRustPackage.override { stdenv = pkgs.gcc14Stdenv; }) rec {
+let
+  # Override rustPlatform's internal stdenv to use the pre-built gcc14Stdenv
+  rustPlatformWithGcc14 = pkgs.rustPlatform.overrideScope (final: prev: {
+    stdenv = pkgs.gcc14Stdenv;
+  });
+in
+# Tell the builder to use our modified rustPlatform and gcc14Stdenv base
+(rustPlatformWithGcc14.buildRustPackage.override { 
+  stdenv = pkgs.gcc14Stdenv; 
+}) rec {
   pname = "nearcore";
   version = "2.12.0";
 
@@ -32,8 +41,6 @@
   buildAndTestSubdir = "neard";
   doCheck = false;
 
-  # Note: Since we didn't specify JEMALLOC_OVERRIDE, tikv-jemalloc-sys will build 
-  # from source using GCC 14, but we need to feed it bzip2/gnumake.
   buildInputs = with pkgs; [
     openssl
     zlib
@@ -44,7 +51,8 @@
 
   nativeBuildInputs = [
     pkgs.pkg-config
-    pkgs.rustPlatform.bindgenHook
+    # Make sure we use the bindgenHook from our modified scope!
+    rustPlatformWithGcc14.bindgenHook
     pkgs.cmake
     pkgs.bzip2
     pkgs.gnumake
