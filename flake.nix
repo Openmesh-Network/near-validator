@@ -44,8 +44,10 @@
         { pkgs, unstablePkgs, ... }:
         {
           default = pkgs.callPackage ./package.nix { rustPlatform = pkgs.rustPlatform.overrideScope (final: prev: {
-            rustc = unstablePkgs.rustc;
-            cargo = unstablePkgs.cargo;
+            rust = prev.rust // {
+              rustc = unstablePkgs.rustc;
+              cargo = unstablePkgs.cargo;
+            };
           });};
         }
       );
