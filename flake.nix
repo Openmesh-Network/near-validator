@@ -21,6 +21,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       systems,
       ...
     }@inputs:
