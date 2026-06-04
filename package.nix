@@ -2,7 +2,7 @@
   pkgs,
   ...
 }:
-pkgs.rustPlatform.buildRustPackage rec {
+(pkgs.rustPlatform.buildRustPackage.override { stdenv = pkgs.gcc14Stdenv; }) rec {
   pname = "nearcore";
   version = "2.12.0";
 
@@ -27,25 +27,15 @@ pkgs.rustPlatform.buildRustPackage rec {
   ];
 
   NEAR_RELEASE_BUILD = "release";
-  OPENSSL_NO_VENDOR = 1; # we want to link to OpenSSL provided by Nix
-  
-  # Correctly point tikv-jemalloc-sys to the Nix-provided jemalloc
-  JEMALLOC_OVERRIDE = "${pkgs.jemalloc}/lib/libjemalloc.a";
-
-  # Point rocksdb-sys to the Nix-provided rocksdb
-  ROCKSDB_LIB_DIR = "${pkgs.rocksdb}/lib";
-  ROCKSDB_INCLUDE_DIR = "${pkgs.rocksdb}/include";
-
-  # Ensure the C++ compiler links against the standard library properly during cc-rs execution
-  NIX_LDFLAGS = "-lstdc++";
+  OPENSSL_NO_VENDOR = 1;
 
   buildAndTestSubdir = "neard";
-  doCheck = false; # needs network
+  doCheck = false;
 
+  # Note: Since we didn't specify JEMALLOC_OVERRIDE, tikv-jemalloc-sys will build 
+  # from source using GCC 14, but we need to feed it bzip2/gnumake.
   buildInputs = with pkgs; [
     openssl
-    jemalloc
-    rocksdb
     zlib
     zstd
     lz4
@@ -55,7 +45,9 @@ pkgs.rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [
     pkgs.pkg-config
     pkgs.rustPlatform.bindgenHook
-    pkgs.cmake # rocksdb-sys / jemalloc-sys often require cmake to configure internal bindings
+    pkgs.cmake
+    pkgs.bzip2
+    pkgs.gnumake
   ];
 
   meta = {
