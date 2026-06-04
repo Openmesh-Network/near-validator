@@ -1,14 +1,9 @@
 {
   pkgs,
+  rustPlatform,
   ...
 }:
-let
-  # Use the valid gcc14Stdenv attribute you found
-  stdenv' = pkgs.gcc14Stdenv;
-in
-(pkgs.rustPlatform.buildRustPackage.override { 
-  stdenv = stdenv'; 
-}) rec {
+rustPlatform.buildRustPackage rec {
   pname = "nearcore";
   version = "2.12.0";
 
@@ -35,28 +30,16 @@ in
   NEAR_RELEASE_BUILD = "release";
   OPENSSL_NO_VENDOR = 1;
 
-  # --- FORCE GCC 14 FOR CC-RS ---
-  # These env vars explicitly hijack what cc-rs looks for during execution
-  CC = "${stdenv'.cc}/bin/cc";
-  CXX = "${stdenv'.cc}/bin/c++";
-
   buildAndTestSubdir = "neard";
   doCheck = false;
 
   buildInputs = with pkgs; [
     openssl
-    zlib
-    zstd
-    lz4
-    snappy
   ];
 
   nativeBuildInputs = [
     pkgs.pkg-config
     pkgs.rustPlatform.bindgenHook
-    pkgs.cmake
-    pkgs.bzip2
-    pkgs.gnumake
   ];
 
   meta = {
