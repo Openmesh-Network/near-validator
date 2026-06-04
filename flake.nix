@@ -41,7 +41,7 @@
       packages = eachSystem (
         { pkgs, ... }:
         {
-          default = pkgs.callPackage ./package.nix { rustPlatform = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}; };
+          default = pkgs.callPackage ./package.nix { rustPlatform = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}. rustPlatform; };
         }
       );
 
