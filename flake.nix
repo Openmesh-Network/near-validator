@@ -43,7 +43,7 @@
       packages = eachSystem (
         { pkgs, unstablePkgs, ... }:
         {
-          default = pkgs.callPackage ./package.nix { rustPlatform = nixpkgs.makeRustPlatform {
+          default = pkgs.callPackage ./package.nix { rustPlatform = pkgs.makeRustPlatform {
               rustc = unstablePkgs.rustc;
               cargo = unstablePkgs.cargo;
             };
