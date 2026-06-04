@@ -34,14 +34,18 @@
           f {
             inherit system;
             pkgs = nixpkgs.legacyPackages.${system};
+            unstablePkgs = nixpkgs-unstable.legacyPackages.${system};
           }
         );
     in
     {
       packages = eachSystem (
-        { pkgs, ... }:
+        { pkgs, unstablePkgs, ... }:
         {
-          default = pkgs.callPackage ./package.nix { rustPlatform = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}. rustPlatform; };
+          default = pkgs.callPackage ./package.nix { rustPlatform = pkgs.rustPlatform.overrideScope (final: prev: {
+            rustc = unstablePkgs.rustc;
+            cargo = unstablePkgs.cargo;
+          });};
         }
       );
 
