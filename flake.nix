@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     near-cli.url = "github:Openmesh-Network/near-cli";
     systems.url = "github:nix-systems/default";
   };
@@ -20,6 +21,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       systems,
       ...
     }@inputs:
@@ -33,14 +35,19 @@
           f {
             inherit system;
             pkgs = nixpkgs.legacyPackages.${system};
+            unstablePkgs = nixpkgs-unstable.legacyPackages.${system};
           }
         );
     in
     {
       packages = eachSystem (
-        { pkgs, ... }:
+        { pkgs, unstablePkgs, ... }:
         {
-          default = pkgs.callPackage ./package.nix { };
+          default = pkgs.callPackage ./package.nix { rustPlatform = pkgs.makeRustPlatform {
+              rustc = unstablePkgs.rustc;
+              cargo = unstablePkgs.cargo;
+            };
+          };
         }
       );
 

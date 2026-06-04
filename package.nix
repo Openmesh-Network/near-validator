@@ -1,16 +1,17 @@
 {
   pkgs,
+  rustPlatform,
   ...
 }:
-pkgs.rustPlatform.buildRustPackage rec {
+rustPlatform.buildRustPackage rec {
   pname = "nearcore";
-  version = "2.11.1";
+  version = "2.12.0";
 
   src = pkgs.fetchFromGitHub {
     owner = "near";
     repo = "nearcore";
     tag = version;
-    hash = "sha256-PPn6puWqo37TPWMll1Q/ZgxJwZC2B3AgLeiZuqULwXY=";
+    hash = "sha256-oZkIE1dWh7HLlmIzQwc/LFVNB38hJkNDf3fGZwkxiFo=";
   };
 
   cargoLock = {
@@ -27,18 +28,18 @@ pkgs.rustPlatform.buildRustPackage rec {
   ];
 
   NEAR_RELEASE_BUILD = "release";
-  OPENSSL_NO_VENDOR = 1; # we want to link to OpenSSL provided by Nix
+  OPENSSL_NO_VENDOR = 1;
 
   buildAndTestSubdir = "neard";
-  doCheck = false; # needs network
+  doCheck = false;
 
-  buildInputs = [
-    pkgs.openssl
+  buildInputs = with pkgs; [
+    openssl
   ];
 
   nativeBuildInputs = [
     pkgs.pkg-config
-    pkgs.rustPlatform.bindgenHook
+    rustPlatform.bindgenHook
   ];
 
   meta = {

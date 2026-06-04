@@ -1,4 +1,5 @@
 {
+  self,
   near-cli,
   ...
 }:
@@ -109,7 +110,7 @@ in
         script =
           let
             nearDir = "${stateDir}/.near";
-            neard = lib.getExe (pkgs.callPackage ./package.nix { });
+            neard = lib.getExe self.packages.${pkgs.system}.default;
           in
           ''
             rm -rf ${nearDir}/genesis.json ${nearDir}/config.json
