@@ -109,7 +109,7 @@ in
         script =
           let
             nearDir = "${stateDir}/.near";
-            neard = lib.getExe (pkgs.callPackage ./package.nix { rustPlatform = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}; });
+            neard = lib.getExe (pkgs.callPackage ./package.nix { rustPlatform = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.rustPlatform; });
           in
           ''
             rm -rf ${nearDir}/genesis.json ${nearDir}/config.json
