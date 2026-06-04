@@ -28,17 +28,32 @@ pkgs.rustPlatform.buildRustPackage rec {
 
   NEAR_RELEASE_BUILD = "release";
   OPENSSL_NO_VENDOR = 1; # we want to link to OpenSSL provided by Nix
+  
+  # Tell rocksdb-sys to use the system jemalloc instead of trying to build its own inside the sandbox
+  ROCKSDB_LIB_DIR = "${pkgs.rocksdb}/lib";
+  ROCKSDB_INCLUDE_DIR = "${pkgs.rocksdb}/include";
+  JEMALLOC_OVERRIDE = "1";
+
+  # Ensure the C++ compiler links against the standard library properly during cc-rs execution
+  NIX_LDFLAGS = "-lstdc++";
 
   buildAndTestSubdir = "neard";
   doCheck = false; # needs network
 
-  buildInputs = [
-    pkgs.openssl
+  buildInputs = with pkgs; [
+    openssl
+    jemalloc
+    rocksdb
+    zlib
+    zstd
+    lz4
+    snappy
   ];
 
   nativeBuildInputs = [
     pkgs.pkg-config
     pkgs.rustPlatform.bindgenHook
+    pkgs.cmake # rocksdb-sys / jemalloc-sys often require cmake to configure internal bindings
   ];
 
   meta = {
