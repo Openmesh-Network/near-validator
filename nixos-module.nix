@@ -60,6 +60,19 @@ in
           };
         };
       };
+
+      storage-clear = {
+        enable = lib.mkEnableOption "Enable clearing NEAR validator storage automatically when free storage falls bellow a certain threshold.";
+
+        min-free = lib.mkOption {
+          type = lib.types.str;
+          default = "15G";
+          example = "500M";
+          description = ''
+            Free storage threshold to trigger the storage clear when bellow.
+          '';
+        };
+      };
     };
   };
 
@@ -134,7 +147,6 @@ in
       timerConfig = {
         OnUnitInactiveSec = cfg.pinger.schedule.minimum-wait;
         RandomizedDelaySec = cfg.pinger.schedule.random-delay;
-        Unit = "near-validator-pinger.service";
         Persistent = true;
       };
     };
@@ -173,5 +185,47 @@ in
           '';
       }
     );
+
+    systemd.timers.near-validator-storage-clear = lib.mkIf cfg.storage-clear.enable {
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "daily";
+        RandomizedOffsetSec = "24h";
+        Persistent = true;
+      };
+    };
+
+    systemd.services.near-validator-storage-clear =
+      let
+        stateDir = "/var/lib/near-validator";
+      in
+      {
+        description = "Remove NEAR validator storage if free space falls under threshold";
+        after = [ "near-validator.target" ];
+        wants = [ "near-validator.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+        };
+        path = [
+          config.systemd.package
+          pkgs.gnused
+        ];
+        script =
+          let
+            dataDir = "${stateDir}/.near/data";
+          in
+          ''
+            free=$(df -B1 --output=avail "${dataDir}" | tail -1)
+            threshold=$(( $(echo "${cfg.storage-clear.min-free}" | sed 's/G$/000000000/;s/M$/000000/;s/K$/000/') ))
+
+            if [ "$free" -ge "$threshold" ]; then
+              exit 0
+            fi
+
+            systemctl stop near-validator
+            rm -rf "${dataDir}"
+            systemctl start near-validator
+          '';
+      };
   };
 }
