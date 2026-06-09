@@ -62,7 +62,11 @@ in
       };
 
       storage-clear = {
-        enable = lib.mkEnableOption "Enable clearing NEAR validator storage automatically when free storage falls bellow a certain threshold.";
+        enable =
+          (lib.mkEnableOption "Enable clearing NEAR validator storage automatically when free storage falls bellow a certain threshold.")
+          // {
+            default = true;
+          };
 
         min-free = lib.mkOption {
           type = lib.types.str;
@@ -199,7 +203,7 @@ in
       let
         stateDir = "/var/lib/near-validator";
       in
-      {
+      lib.mkIf cfg.storage-clear.enable {
         description = "Remove NEAR validator storage if free space falls under threshold";
         after = [ "near-validator.target" ];
         wants = [ "near-validator.target" ];
