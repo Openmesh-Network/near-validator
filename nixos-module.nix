@@ -115,6 +115,20 @@ in
           User = "near-validator";
           Group = "near-validator";
           Restart = "on-failure";
+          ExecStopPost =
+            let
+              dataDir = "${stateDir}/.near/data";
+            in
+            lib.mkIf cfg.storage-clear.enable (
+              lib.getExe (
+                pkgs.writeShellScriptBin "near-validator-stop" ''
+                  if [ "$EXIT_STATUS" = 134 ]; then
+                    # Storage issue, try to resolve by clearing (and resyncing)
+                    rm -rf "${dataDir}"
+                  fi
+                ''
+              )
+            );
         };
         path = [
           pkgs.curl
@@ -205,8 +219,8 @@ in
       in
       lib.mkIf cfg.storage-clear.enable {
         description = "Remove NEAR validator storage if free space falls under threshold";
-        after = [ "near-validator.target" ];
-        wants = [ "near-validator.target" ];
+        after = [ "near-validator.service" ];
+        wants = [ "near-validator.service" ];
         serviceConfig = {
           Type = "oneshot";
         };
