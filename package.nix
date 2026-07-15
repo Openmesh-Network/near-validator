@@ -5,13 +5,13 @@
 }:
 rustPlatform.buildRustPackage rec {
   pname = "nearcore";
-  version = "2.13.0";
+  version = "2.13.1";
 
   src = pkgs.fetchFromGitHub {
     owner = "near";
     repo = "nearcore";
     tag = version;
-    hash = "sha256-lqWLLRSZSJP89XHQkJx6uJ4DD0e/8oDmVLt5Mo56fkw=";
+    hash = "sha256-hXtOZb73V3NBQ5RLech/TCklNiScVegxdwLnBDhDk98=";
   };
 
   cargoLock = {
